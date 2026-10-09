@@ -48,7 +48,7 @@ services:
 
   sf-station:
     # SmartFace Station UI, kept for backward compatibility (the VPP release no longer ships it).
-    image: ${REGISTRY}vpp/sf-station:${SFS_VERSION}
+    image: registry.dot.innovatrics.com/vpp/sf-station:${SFS_VERSION}
     container_name: sf-station
     restart: unless-stopped
     ports:

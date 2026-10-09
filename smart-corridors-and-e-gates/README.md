@@ -26,7 +26,7 @@ The platform requires an `iengine.lic` file tied to the hardware of the machine 
 To get your hardware ID, run:
 
 ```bash
-docker run --rm registry.dot.innovatrics.com/border-control/vpp/license-manager:3.2.7
+docker run --rm registry.dot.innovatrics.com/vpp/license-manager:3.2.7
 ```
 
 Provide this ID when requesting a license from the [Customer Portal](https://customerportal.innovatrics.com).
@@ -102,7 +102,7 @@ Face crop thumbnails stream through the Hub's in-service image proxy (`/corridor
 
 | File                              | Edit                                                                                                   | Why                                                                        |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| `.env`                            | `REGISTRY=registry.dot.innovatrics.com/border-control/vpp/` (release: internal registry)              | Customers pull everything from Harbor                                      |
+| `.env`                            | `REGISTRY=registry.dot.innovatrics.com/vpp/` (release: internal registry)              | Customers pull everything from Harbor                                      |
 | `.env`                            | `Notifications__IncludeTemplates=true` (release: `false`)                                              | The Hub and CIGS consume face templates from the VPP GraphQL notifications |
 | `dependencies/docker-compose.yml` | `milvus`, `milvus-etcd` and `milvus-create-user` services (and their volumes/configs) removed          | The vector database is not used (`VectorDB__Provider=none`)                |
 | `run.sh`                          | `ensure_milvus_user_provisioned` wait removed                                                          | Follows the Milvus removal                                                 |
@@ -114,7 +114,7 @@ The VPP services are reachable from the corridor services by their Compose servi
 
 #### Upgrading the VPP
 
-1. Mirror the new release's images (and `license-manager`) into `registry.dot.innovatrics.com/border-control/vpp/`. This is done by Innovatrics with internal tooling; it is not part of this repository.
+1. Mirror the new release's images (and `license-manager`) into `registry.dot.innovatrics.com/vpp/`. This is done by Innovatrics with internal tooling; it is not part of this repository.
 2. Unpack the new `video_processing_deployment.zip` over `vpp/` (delete the old contents first) and re-apply the local edits listed above.
 3. Read the VPP release notes. If the face template model changed, run `vpp/migrate-faces.sh` and `vpp/finalize-non-migrated-faces.sh` as described in `vpp/README.md` before starting the services.
 4. Run `bash start.sh` — the VPP `run.sh` migrates the database to the new version on the way up.
