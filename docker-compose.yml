@@ -19,15 +19,12 @@ services:
     image: ${REGISTRY}corridor-identity-grouping-service:${CIGS_VERSION}
     container_name: sceg-cigs
     restart: unless-stopped
-    # restart: reacts to exits only; a hung JVM needs the healthcheck + autoheal.
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:80/actuator/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 60s
-    labels:
-      sceg-autoheal: "true"
     ports:
       - "8096:80"
     environment:
@@ -66,8 +63,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    labels:
-      sceg-autoheal: "true"
     ports:
       - "${FRONTEND_PORT:-8095}:80"
     environment:
@@ -79,16 +74,6 @@ services:
     # Requires the smart_corridor.operational_display license block.
     volumes:
       - ./secrets/iengine.lic:/etc/innovatrics/iengine.lic:ro
-
-  # Restarts containers labeled sceg-autoheal=true once Docker marks them unhealthy. Needs the docker socket.
-  autoheal:
-    image: willfarrell/autoheal:1.2.0
-    container_name: sceg-autoheal
-    restart: unless-stopped
-    environment:
-      AUTOHEAL_CONTAINER_LABEL: sceg-autoheal
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
   default:
