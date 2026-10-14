@@ -1,0 +1,7 @@
+# Smart Corridor additions to the Face Matcher stack, applied by start.sh through COMPOSE_FILE.
+# Paths are relative to face-matcher/ (the Compose project directory).
+services:
+  station:
+    env_file:
+      - ./.env.station
+      - ../station-labels.env
