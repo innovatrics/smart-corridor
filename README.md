@@ -42,7 +42,7 @@ Ports are published on all interfaces with default credentials. Do not expose th
 
 - `.env` - corridor image versions and the dashboard port
 - `.env.hub` - Hub: allowed watchlists, corridor units and their cameras, storage, zone notifications. Documented inline.
-- `face-matcher/` - a copy of the Face Matcher repository. Do not edit it. To upgrade, replace the directory with a checkout of the new release. `start.sh` runs it with `STATION_IDENTIFICATION=false`.
+- `face-matcher/` - a copy of the Face Matcher repository. Do not edit it, with one exception: `face-matcher/.env.station` is pre-configured with the Smart Corridor watchlist member labels (`WATCHLIST_MEMBER_KEY_n` / `WATCHLIST_MEMBER_LABEL_n`). To upgrade, replace the directory with a checkout of the new release and carry that label block over. `start.sh` runs it with `STATION_IDENTIFICATION=false`.
 
 All services join `face-matcher-network`, created by Face Matcher. The corridor services use only what [`face-matcher/README.md`](face-matcher/README.md#integration) lists.
 
