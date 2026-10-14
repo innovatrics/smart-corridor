@@ -16,6 +16,13 @@ chmod a+r ./secrets/iengine.lic
 
 (cd ./face-matcher && bash run.sh)
 
+# The Hub's own database on the platform PostgreSQL: waits for pgsql, creates it only when missing.
+# The password is POSTGRES_PASSWORD from face-matcher/dependencies/docker-compose.yml.
+docker run --rm -i --network face-matcher-network -e PGPASSWORD=Test1234 postgres:14.3 \
+  sh -c 'until pg_isready -q -h pgsql -U postgres; do sleep 1; done; psql -v ON_ERROR_STOP=1 -q -h pgsql -U postgres' <<'SQL'
+SELECT 'CREATE DATABASE corridorhub' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'corridorhub')\gexec
+SQL
+
 # Create the Hub's crop bucket on the platform's S3 storage.
 PLATFORM=./face-matcher
 getvalue() { grep -E "^$1=" "$PLATFORM/.env" | head -n1 | cut -d '=' -f2- | sed -E -e 's/\r$//' -e 's/[[:space:]]+#.*$//' -e 's/[[:space:]]+$//'; }

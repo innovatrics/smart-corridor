@@ -5,6 +5,8 @@ services:
     image: ${REGISTRY}corridor-hub:${HUB_VERSION}
     container_name: sceg-hub
     restart: unless-stopped
+    # The buildpack sizes the JVM from this limit; without one it takes the memory free at container start.
+    mem_limit: 2g
     ports:
       - "8090:8090"
     env_file:
@@ -44,8 +46,14 @@ services:
       CORRIDOR_IDENTITY_GROUPING_FACE_FILTER_ROLL_ANGLE_MIN: -50
       CORRIDOR_IDENTITY_GROUPING_FACE_FILTER_ROLL_ANGLE_MAX: 50
       CORRIDOR_IDENTITY_GROUPING_GROUPING_VERIFICATION_SCORE_THRESHOLD: 35
+      # Resets the identity ordinals (#N) daily at midnight in TZ (the image is UTC).
+      # CORRIDOR_IDENTITY_GROUPING_GROUPING_IDENTITY_ORDINAL_DAILY_RESET: "true"
+      # TZ: Europe/Bratislava
+      # The values above are defaults; settings saved through the CIGS API override them and persist here.
+      CIGS_SETTINGS_FILE: /var/lib/cigs/settings/overrides.json
     volumes:
       - ./secrets/iengine.lic:/etc/innovatrics/iengine.lic:ro
+      - cigs-settings:/var/lib/cigs/settings
 
   # hub has no healthcheck: its image ships no shell or curl.
   frontend:
@@ -57,23 +65,24 @@ services:
       hub:
         condition: service_started
         restart: true
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:80/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
+    # nginx runs as non-root (UID 101) on 8080; the image has its own healthcheck.
     ports:
-      - "${FRONTEND_PORT:-8095}:80"
+      - "${FRONTEND_PORT:-8095}:8080"
     environment:
+      # All data calls go through the Hub, the platform REST API too (HUB_VPP_REST_URL in .env.hub).
       HUB_URL: http://sceg-hub:8090
-      SMARTFACE_GQL_URL: http://graphql-api:8080
-      SMARTFACE_API_URL: http://api:8080
+      # One threshold, two bands; positive = GREEN match, negative = RED match (any CSS colour).
+      # CORRIDOR_SCORE_BANDS: '{"threshold":80,"lower":{"label":"Low","positive":"#f5d547","negative":"#ffa726"},"upper":{"label":"High","positive":"#59e670","negative":"#e65959"}}'
+      # Operator words: unidentified, cleared, blacklisted, deniedWatchlist, liveFace, enrolledFace, connectionLost.
+      # CORRIDOR_PRESENTATION_LABELS: '{"unidentified":"Unidentified"}'
       # Station serves the live camera preview through the frontend nginx. Unset: Cameras panel shows "unavailable".
       SMARTFACE_STATION_URL: http://fm-station:8000
     # Requires the smart_corridor.operational_display license block.
     volumes:
       - ./secrets/iengine.lic:/etc/innovatrics/iengine.lic:ro
+
+volumes:
+  cigs-settings:
 
 networks:
   default:
