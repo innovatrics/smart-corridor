@@ -41,7 +41,7 @@ Ports are published on all interfaces with default credentials. Do not expose th
 ## Configuration
 
 - `.env` - corridor image versions and the dashboard port
-- `.env.hub` - Hub: allowed watchlists, corridor units and their cameras, storage, zone notifications. Documented inline.
+- `.env.hub` - Hub: denied watchlists (RED), database, corridor units and their cameras, storage, zone notifications. Documented inline.
 - `face-matcher/` - a copy of the Face Matcher repository. Do not edit it, with one exception: `face-matcher/.env.station` is pre-configured with the Smart Corridor watchlist member labels (`WATCHLIST_MEMBER_KEY_n` / `WATCHLIST_MEMBER_LABEL_n`). To upgrade, replace the directory with a checkout of the new release and carry that label block over. `start.sh` runs it with `STATION_IDENTIFICATION=false`.
 
 All services join `face-matcher-network`, created by Face Matcher. The corridor services use only what [`face-matcher/README.md`](face-matcher/README.md#integration) lists.
@@ -49,6 +49,19 @@ All services join `face-matcher-network`, created by Face Matcher. The corridor 
 ## Zone notifications (Hub 0.4.0 and newer)
 
 The Hub can emit `zone.*` notifications (person entered, left, moved, occupancy, counts) on the `corridorEvents` subscription, each computed from the platform, CIGS or MCT. `.env.hub` contains a commented example. `person_moved` requires MCT.
+
+## Clearance
+
+The Hub clears every watchlist match GREEN unless the matched watchlist is listed in `VPP_ADAPTER_DENIED_WATCHLISTS` (`.env.hub`; watchlist ids as the platform reports them in a match, or globs such as `red.*`); such a match is RED. An empty list makes every match GREEN, `*` makes every match RED. The dashboard names the watchlist on each card and shows the enrolled face of the matched member next to the live one.
+
+## Upgrading from Hub 0.4.0 / dashboard 0.5.0
+
+- `VPP_ADAPTER_ALLOWED_WATCHLISTS` is retired and the Hub refuses to start while it is set. Put the watchlists that must clear RED into `VPP_ADAPTER_DENIED_WATCHLISTS` instead; the meaning is inverted. With no list set, every match used to be RED and is now GREEN; `VPP_ADAPTER_DENIED_WATCHLISTS=*` keeps every match RED.
+- The dashboard listens on port 8080 inside the container (non-root image).
+- The Hub proxies the platform REST API for the dashboard: set `HUB_VPP_REST_URL`.
+- The Hub keeps its corridor configuration and event history in PostgreSQL: set `SPRING_DATASOURCE_*` in `.env.hub` (database `corridorhub` on the platform's `pgsql`, created by `start.sh`). Without it the Hub falls back to an in-memory database and loses both on every restart.
+
+Then run `stop.sh`, pull the new version and run `start.sh`.
 
 # Multi-Camera Tracking (MCT)
 
