@@ -54,6 +54,15 @@ The Hub can emit `zone.*` notifications (person entered, left, moved, occupancy,
 
 The Hub clears every watchlist match GREEN unless the matched watchlist is listed in `VPP_ADAPTER_DENIED_WATCHLISTS` (`.env.hub`; watchlist ids as the platform reports them in a match, or globs such as `red.*`); such a match is RED. An empty list makes every match GREEN, `*` makes every match RED. The dashboard names the watchlist on each card and shows the enrolled face of the matched member next to the live one.
 
+## Upgrading from Hub 0.9.2 / dashboard 0.9.1
+
+- The Hub no longer proxies Face Matcher: `/corridor-hub/vpp/**` answers 404. The dashboard's nginx calls Face Matcher itself, server-side, so the browser still talks to the dashboard only. It needs `FACE_MATCHER_GQL_URL` and `FACE_MATCHER_API_URL` (set in `docker-compose.yml`) and does not start without them.
+- The camera preview reads `FACE_MATCHER_STATION_URL`, formerly `SMARTFACE_STATION_URL`. The dashboard ignores the old name and logs a warning.
+- `HUB_VPP_REST_URL` is removed from `.env.hub`; Hub 0.10.0 ignores it.
+- Upgrade the Hub and the dashboard together, and roll both back together: dashboard 0.9.1 and older needs the Face Matcher proxy of Hub 0.9.2 and older.
+
+If you changed `docker-compose.yml` or `.env.hub`, carry these changes over. Then run `stop.sh`, pull the new version and run `start.sh`. Coming from Hub 0.9.1 / dashboard 0.8.0, also purge the dead-letter queue as described below.
+
 ## Upgrading from Hub 0.9.1 / dashboard 0.8.0
 
 - Events the Hub cannot process (dead letters, kept in the RabbitMQ queue `biometric_events.dlq`) no longer contain face crops, templates or watchlist member names, and each expires after `DEAD_LETTER_TTL` (`.env.hub`, default 7 days).
