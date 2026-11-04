@@ -4,7 +4,7 @@ services:
     extends:
       service: common
       file: docker-compose-common.yml
-    image: postgres:14.3
+    image: postgres:18.6
     ports:
       - "5432:5432"
     environment:
@@ -24,12 +24,12 @@ services:
         aliases:
           - pgsql
     volumes:
-      - pgsqldata:/var/lib/postgresql/data
+      - pgsqldata:/var/lib/postgresql
   pgadmin:
     extends:
       service: common
       file: docker-compose-common.yml
-    image: "dpage/pgadmin4:6.10"
+    image: "dpage/pgadmin4:9.19"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: Test1234
